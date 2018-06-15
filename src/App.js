@@ -21,36 +21,55 @@ const list = [
 },
 ];
 
+const isSearched = searchTerm => item =>
+  item.title.toLowerCase().includes(searchTerm.toLowerCase());
+
 class App extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
       list,
+      searchTerm: '',
     };
+    // this.onDismiss = this.onDismiss.bind(this);
+  }
+
+  onDismiss(id) {
+    const updatedList = this.state.list.filter(item => item.objectID !== id);
+    this.setState({ list: updatedList });
+  }
+
+  onSearchChange (e) {
+    this.setState({ searchTerm: e.target.value });
   }
 
   render() {
+
     const helloWorld = 'Welcome to Road to Learn React';
-    const name = 'Necatis';
+    const name = 'Necati';
     const surname = 'Ozmen';
     return (
       <div className="App">
-        {list.map(item =>
-       <div key ={item.objectID}>
-          <span>{item.author}</span>
-          <span>{item.num_comments}</span>
-          <span>{item.points}</span><span>
-            <button
-              onClick={() => this.onDismiss(item.objectID)}
-              type="button"
-              >
-                Dismiss
-            </button>
-          </span>
-       </div>
+        <form>
+          <input type="text"
+          onChange={(e) => this.onSearchChange(e)}
+        />
+        </form>
+        {this.state.list.filter(isSearched(this.state.searchTerm)).map(item =>
+           <div key ={item.objectID}>
+              <span>{item.author}</span>
+              <span>{item.num_comments}</span>
+              <span>{item.points}</span><span>
+                <button
+                  onClick={() => this.onDismiss(item.objectID)}
+                  type="button"
+                  >
+                    Dismiss
+                </button>
+              </span>
+           </div>
         )}
-
       </div>
     );
   }
