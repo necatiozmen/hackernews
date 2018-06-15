@@ -45,6 +45,10 @@ class App extends Component {
   }
 
   render() {
+
+    const helloWorld = 'Welcome to Road to Learn React';
+    const name = 'Necati';
+    const surname = 'Ozmen';
     return (
       <div className="App">
         <form>
