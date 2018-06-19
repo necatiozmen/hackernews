@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
 import axios from 'axios';
+import PropTypes from 'prop-types';
 
 const DEFAULT_QUERY = 'redux';
 const DEFAULT_HPP = '100';
@@ -15,6 +16,15 @@ const PARAM_HPP = 'hitsPerPage=';
 const isSearched = searchTerm => item =>
   item.title.toLowerCase().includes(searchTerm.toLowerCase());
 
+// const Loading = () => {
+//   <div>Loading ...</div>;
+// };
+//
+// const withLoading = (Component) => ({ isLoading, ...rest }) =>
+// isLoading
+//   ? <Loading />
+//   : <Component { ...rest } />
+
 class App extends Component {
   _isMounted = false;
 
@@ -26,11 +36,14 @@ class App extends Component {
       searchKey: '',
       searchTerm: DEFAULT_QUERY,
       error: null,
+      isLoading: false,
     };
 
     this.setSearchTopStories = this.setSearchTopStories.bind(this);
     this.fetchSearchTopStories = this.fetchSearchTopStories.bind(this);
   }
+
+
 
   setSearchTopStories(results) {
     const  { hits, page } = results;
@@ -50,6 +63,7 @@ class App extends Component {
         ...results,
         [searchKey]:  { hits: updatedHits, page },
       },
+      isLoading: false
     });
   }
 
@@ -70,6 +84,7 @@ class App extends Component {
   };
 
   fetchSearchTopStories(searchTerm, page = 0) {
+    this.setState({ isLoading: true });
     axios(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`)
       .then(result => this._isMounted && this.setSearchTopStories(result.data))
       .catch(error => this._isMounted && this.setState({ error }));
@@ -112,7 +127,7 @@ class App extends Component {
   }
 
   render() {
-    const{ searchTerm, results, searchKey, error } = this.state;
+    const{ searchTerm, results, searchKey, error, isLoading } = this.state;
     const page = (results && results[searchKey] && results[searchKey].page) || 0;
     const list = (
       results &&
@@ -127,6 +142,7 @@ class App extends Component {
     return (
       <div className="page">
         <div className="interactions">
+
         <Search
           value={searchTerm}
           onChange={(e) => this.onSearchChange(e)}
@@ -142,9 +158,13 @@ class App extends Component {
         />
       }
       <div className="interactions">
-        <Button onClick={() => this.fetchSearchTopStories(searchKey, page + 1)}>
-          More
-        </Button>
+        {isLoading
+        ? <Loading />
+        :   <Button onClick={() => this.fetchSearchTopStories(searchKey, page + 1)}>
+            More
+          </Button>
+      }
+
       </div>
       { error
         ? <div className="interactions">
@@ -160,18 +180,54 @@ class App extends Component {
   }
 }
 
-const Search = ({ value, onChange, onSubmit, children }) =>
-    <form onSubmit={onSubmit}>
-      {children}
-      <input
-        type='text'
-        value={value}
-        onChange={onChange}
-      />
-      <button type="submit">
-        {children}
-      </button>
-    </form>;
+class Search extends Component {
+  componentDidMount() {
+    if(this.input) {
+      this.input.focus();
+    }
+  }
+  render() {
+    const {
+        value,
+        onChange,
+        onSubmit,
+        children
+        } = this.props;
+        return (
+            <form onSubmit={onSubmit}>
+            {children}
+            <input
+                type='text'
+                value={value}
+                onChange={onChange}
+                ref={(node) => { this.input = node }}
+              />
+            <button type="submit">
+              {children}
+            </button>
+          </form>
+          );
+  }
+}
+
+// const Search = ({ value, onChange, onSubmit, children }) => {
+//   let input;
+//   return (
+//       <form onSubmit={onSubmit}>
+//       {children}
+//       <input
+//           type='text'
+//           value={value}
+//           onChange={onChange}
+//           ref={(node) => input = node}
+//         />
+//       <button type="submit">
+//         {children}
+//       </button>
+//     </form>
+//     );
+// }
+
 
 const Table = ({ list, onDismiss }) =>
     <div className="table">
@@ -201,6 +257,11 @@ const Table = ({ list, onDismiss }) =>
     )}
   </div>;
 
+Table.PropTypes = {
+  list: PropTypes.array.isRequired,
+  onDismiss: PropTypes.func.isRequired,
+};
+
 const Button = ({ onClick, className = '', children }) =>
 <button
   onClick={onClick}
@@ -209,5 +270,28 @@ const Button = ({ onClick, className = '', children }) =>
   >
   {children}
 </button>;
+ 
+const Loading = () => {
+  <div>Loading ...</div>;
+};
+
+const withLoading = (Component) => ({ isLoading, ...rest }) =>
+isLoading
+  ? <Loading />
+  : <Component { ...rest } />
+
+const ButtonWithLoading = withLoading(Button);
+
+Button.PropTypes = {
+  onClick: PropTypes.func,
+  className: PropTypes.string,
+  children: PropTypes.node,
+};
 
 export default App;
+
+export {
+  Button,
+  Search,
+  Table,
+};
